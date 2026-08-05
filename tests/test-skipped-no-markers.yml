@@ -1,0 +1,35 @@
+name: Test skipped status when markers are missing
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create README without sponsor markers
+        run: |
+          cat > "$GITHUB_WORKSPACE/NO_MARKERS.md" << 'EOF'
+          # Sponsors
+
+          No markers here at all.
+
+          Thank you!
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: NO_MARKERS.md
+
+      - name: Assert sponsorshipStatus is skipped
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "skipped" ]; then
+            echo "FAIL: expected 'skipped' but got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS: sponsorshipStatus=skipped as expected"

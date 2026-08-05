@@ -1,0 +1,40 @@
+name: Test basic usage with markers
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create README with sponsor markers
+        run: |
+          cat > /tmp/SPONSORS.md << 'EOF'
+          # Sponsors
+
+          <!-- sponsors --><!-- sponsors -->
+
+          Thank you!
+          EOF
+          cp /tmp/SPONSORS.md "$GITHUB_WORKSPACE/SPONSORS.md"
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: SPONSORS.md
+
+      - name: Assert sponsorshipStatus is not failed
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" = "failed" ]; then
+            echo "FAIL: sponsorshipStatus was 'failed', expected 'success' or 'skipped'"
+            exit 1
+          fi
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: sponsorshipStatus was empty"
+            exit 1
+          fi
+          echo "PASS: sponsorshipStatus=$ACTUAL"

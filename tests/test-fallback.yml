@@ -1,0 +1,48 @@
+name: Test fallback text when no sponsors
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create README with sponsor markers
+        run: |
+          cat > "$GITHUB_WORKSPACE/FALLBACK_TEST.md" << 'EOF'
+          # Sponsors
+
+          <!-- sponsors --><!-- sponsors -->
+
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: FALLBACK_TEST.md
+          fallback: "No sponsors yet — be the first!"
+
+      - name: Assert sponsorshipStatus is not failed
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" = "failed" ]; then
+            echo "FAIL: sponsorshipStatus was 'failed', expected 'success' or 'skipped'"
+            exit 1
+          fi
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: sponsorshipStatus was empty"
+            exit 1
+          fi
+          echo "PASS: sponsorshipStatus=$ACTUAL"
+
+      - name: Assert file was written
+        run: |
+          if [ ! -f "$GITHUB_WORKSPACE/FALLBACK_TEST.md" ]; then
+            echo "FAIL: FALLBACK_TEST.md not found"
+            exit 1
+          fi
+          echo "PASS: file exists"
+          cat "$GITHUB_WORKSPACE/FALLBACK_TEST.md"
