@@ -1,0 +1,41 @@
+name: Test fallback with high minimum threshold
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Prepare README with sponsor markers
+        run: |
+          cp "$GITHUB_WORKSPACE/tests/fixtures/README.md" "$GITHUB_WORKSPACE/README.md"
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: README.md
+          minimum: 9999999
+          fallback: 'No sponsors yet!'
+
+      - name: Assert sponsorshipStatus is success
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "success" ]; then
+            echo "FAIL: expected 'success' but got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert README contains fallback text
+        run: |
+          echo "README contents:"
+          cat "$GITHUB_WORKSPACE/README.md"
+          if ! grep -q 'No sponsors yet!' "$GITHUB_WORKSPACE/README.md"; then
+            echo "FAIL: fallback text not found in README.md"
+            exit 1
+          fi
+          echo "PASS: README.md contains fallback text"

@@ -1,6 +1,16 @@
 {
   "owner": "JamesIves",
   "repo": "github-sponsors-readme-action",
-  "version": "",
-  "url": "https://github.com/JamesIves/github-sponsors-readme-action"
+  "version": "v1.5.6",
+  "commit_sha": "1a120c92d5067dafeaedb33916301fd61338883d",
+  "url": "https://github.com/JamesIves/github-sponsors-readme-action",
+  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
+  "test_agent_version": "2",
+  "harden_agent_version": "2",
+  "node_artifact": {
+    "gcs_uri": "gs://prod-actions-node-artifacts/node-artifacts/JamesIves/github-sponsors-readme-action/v1.5.6/sha256-249edcd93c8e2fd520bfabaf71e908e3efddac46beb81b2ee3ee1f303ca9cd29.tar.gz",
+    "sha256": "249edcd93c8e2fd520bfabaf71e908e3efddac46beb81b2ee3ee1f303ca9cd29",
+    "size_bytes": 10367143
+  }
 }

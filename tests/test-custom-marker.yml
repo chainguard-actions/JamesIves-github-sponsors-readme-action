@@ -1,0 +1,38 @@
+name: Test custom marker
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Prepare CREDITS.md with custom gold markers
+        run: |
+          cp "$GITHUB_WORKSPACE/tests/fixtures/CREDITS.md" "$GITHUB_WORKSPACE/CREDITS.md"
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: CREDITS.md
+          marker: gold
+
+      - name: Assert sponsorshipStatus is success
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "success" ]; then
+            echo "FAIL: expected 'success' but got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert CREDITS.md was updated (gold markers still present)
+        run: |
+          if ! grep -q '<!-- gold -->' "$GITHUB_WORKSPACE/CREDITS.md"; then
+            echo "FAIL: gold markers not found in CREDITS.md"
+            exit 1
+          fi
+          echo "PASS: CREDITS.md contains gold markers"

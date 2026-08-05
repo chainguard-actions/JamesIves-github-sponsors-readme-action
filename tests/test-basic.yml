@@ -1,0 +1,37 @@
+name: Test basic usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Prepare README with sponsor markers
+        run: |
+          cp "$GITHUB_WORKSPACE/tests/fixtures/README.md" "$GITHUB_WORKSPACE/README.md"
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: README.md
+
+      - name: Assert sponsorshipStatus is success
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "success" ]; then
+            echo "FAIL: expected 'success' but got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert README was updated (markers still present)
+        run: |
+          if ! grep -q '<!-- sponsors -->' "$GITHUB_WORKSPACE/README.md"; then
+            echo "FAIL: sponsor markers not found in README.md"
+            exit 1
+          fi
+          echo "PASS: README.md contains sponsor markers"
