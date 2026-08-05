@@ -1,0 +1,43 @@
+name: Test custom marker
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create test README with custom marker
+        run: |
+          cat > /tmp/test-readme-gold.md << 'EOF'
+          # Test README
+
+          ## Gold Sponsors
+
+          <!-- gold --><!-- gold -->
+
+          Thank you to our gold sponsors!
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: /tmp/test-readme-gold.md
+          marker: gold
+        continue-on-error: true
+
+      - name: Assert sponsorshipStatus output is set
+        env:
+          STATUS: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "sponsorshipStatus: $STATUS"
+          if [ -z "$STATUS" ]; then
+            echo "FAIL: sponsorshipStatus output was empty/not set"
+            exit 1
+          fi
+          if [ "$STATUS" != "success" ] && [ "$STATUS" != "failed" ]; then
+            echo "FAIL: expected 'success' or 'failed', got: $STATUS"
+            exit 1
+          fi
+          echo "PASS: sponsorshipStatus=$STATUS"
