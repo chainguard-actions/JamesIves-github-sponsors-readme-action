@@ -1,0 +1,50 @@
+name: Test optional inputs (minimum, maximum, fallback, active-only)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create README with sponsor markers
+        run: |
+          cat > /tmp/SPONSORS_README.md << 'EOF'
+          # Test README
+
+          <!-- sponsors --><!-- sponsors -->
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          token: fake-token-for-testing
+          file: /tmp/SPONSORS_README.md
+          minimum: 500
+          maximum: 10000
+          fallback: '<p>No sponsors yet!</p>'
+          active-only: 'true'
+          include-private: 'false'
+
+      - name: Assert sponsorshipStatus output is set
+        env:
+          STATUS: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "sponsorshipStatus: $STATUS"
+          if [ -z "$STATUS" ]; then
+            echo "FAIL: sponsorshipStatus output was not set"
+            exit 1
+          fi
+          echo "PASS: sponsorshipStatus is '$STATUS'"
+
+      - name: Assert sponsorshipStatus is failed (invalid token)
+        env:
+          STATUS: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "sponsorshipStatus: $STATUS"
+          if [ "$STATUS" != "failed" ]; then
+            echo "FAIL: expected 'failed' but got '$STATUS'"
+            exit 1
+          fi
+          echo "PASS: action correctly reported failed status with optional inputs"

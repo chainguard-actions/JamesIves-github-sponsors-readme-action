@@ -1,0 +1,44 @@
+name: Integration Tests 🧪
+on:
+  workflow_call:
+    secrets:
+      PAT:
+        required: true
+  workflow_dispatch:
+  schedule:
+    - cron: 30 15 * * 0-6
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Generate Sponsors 💖
+        uses: JamesIves/github-sponsors-readme-action@2fd9142e765f755780202122261dc85e78459405 # releases/v1
+        with:
+          token: ${{ secrets.PAT }}
+          file: '.github/TEST.md'
+
+      - name: Generate Sponsors 💖
+        uses: JamesIves/github-sponsors-readme-action@2fd9142e765f755780202122261dc85e78459405 # releases/v1
+        with:
+          token: ${{ secrets.PAT }}
+          file: '.github/TEST.md'
+          minimum: 500
+          maximum: 999
+          marker: 'silver'
+          fallback: 'No sponsors at this level'
+
+      - name: Generate Sponsors 💖
+        uses: JamesIves/github-sponsors-readme-action@2fd9142e765f755780202122261dc85e78459405 # releases/v1
+        with:
+          token: ${{ secrets.PAT }}
+          file: '.github/TEST.md'
+          minimum: 1000
+          marker: 'gold'
+          fallback: 'No sponsors at this level'

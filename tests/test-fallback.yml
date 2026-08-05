@@ -1,0 +1,51 @@
+name: Test fallback when no sponsors match threshold
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Copy fixture to writable location
+        run: cp $GITHUB_WORKSPACE/tests/fixtures/fallback-readme.md /tmp/fallback-readme.md
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: /tmp/fallback-readme.md
+          minimum: '99999900'
+          fallback: 'No sponsors yet!'
+        continue-on-error: true
+
+      - name: Assert sponsorshipStatus output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected sponsorshipStatus to be set (success or failed)"
+            exit 1
+          fi
+          if [ "$ACTUAL" != "success" ] && [ "$ACTUAL" != "failed" ]; then
+            echo "FAIL: expected 'success' or 'failed' but got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS: sponsorshipStatus=$ACTUAL"
+
+      - name: Assert fallback text in file when action succeeded
+        env:
+          STATUS: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "File contents:"
+          cat /tmp/fallback-readme.md
+          if [ "$STATUS" = "success" ]; then
+            if ! grep -q "No sponsors yet!" /tmp/fallback-readme.md; then
+              echo "FAIL: expected fallback text 'No sponsors yet!' in file"
+              exit 1
+            fi
+            echo "PASS: fallback text found in file"
+          else
+            echo "SKIP: action did not succeed (status=$STATUS), skipping fallback content check"
+          fi

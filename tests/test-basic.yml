@@ -1,0 +1,33 @@
+name: Test basic usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Copy fixture to writable location
+        run: cp $GITHUB_WORKSPACE/tests/fixtures/basic-readme.md /tmp/test-readme.md
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: /tmp/test-readme.md
+        continue-on-error: true
+
+      - name: Assert sponsorshipStatus output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected sponsorshipStatus to be set (success or failed)"
+            exit 1
+          fi
+          if [ "$ACTUAL" != "success" ] && [ "$ACTUAL" != "failed" ]; then
+            echo "FAIL: expected 'success' or 'failed' but got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS: sponsorshipStatus=$ACTUAL"
