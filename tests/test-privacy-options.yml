@@ -1,0 +1,39 @@
+name: Test include-private and active-only inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          token: fake-invalid-token-12345
+          file: tests/fixtures/README.md
+          include-private: 'true'
+          active-only: 'false'
+
+      - name: Assert sponsorshipStatus output is set
+        env:
+          STATUS: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "sponsorshipStatus: $STATUS"
+          if [ -z "$STATUS" ]; then
+            echo "FAIL: sponsorshipStatus output was not set"
+            exit 1
+          fi
+          echo "PASS: sponsorshipStatus is set to '$STATUS'"
+
+      - name: Assert sponsorshipStatus is failed (invalid token)
+        env:
+          STATUS: ${{ steps.action.outputs.sponsorshipStatus }}
+        run: |
+          echo "sponsorshipStatus: $STATUS"
+          if [ "$STATUS" != "failed" ]; then
+            echo "FAIL: expected 'failed' but got '$STATUS'"
+            exit 1
+          fi
+          echo "PASS: sponsorshipStatus correctly set to 'failed' with privacy options"

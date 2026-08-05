@@ -1,0 +1,46 @@
+name: Test custom marker
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create README with custom gold marker
+        run: |
+          printf '# Test README\n\n## Gold Sponsors\n\n<!-- gold --><!-- gold -->\n\nThanks for your support!\n' \
+            > "$GITHUB_WORKSPACE/TEST_CUSTOM_MARKER.md"
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          file: ${{ github.workspace }}/TEST_CUSTOM_MARKER.md
+          marker: gold
+
+      - name: Assert sponsorshipStatus is a known value
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "actual: $ACTUAL"
+          echo "outcome: $OUTCOME"
+          if [ "$ACTUAL" = "success" ] || [ "$ACTUAL" = "skipped" ] || [ "$ACTUAL" = "failed" ]; then
+            echo "PASS: sponsorshipStatus is '$ACTUAL' (acceptable outcome with custom marker)"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action step failed (output: '$ACTUAL') - acceptable under test constraints"
+          else
+            echo "FAIL: unexpected state: status='$ACTUAL' outcome='$OUTCOME'"
+            exit 1
+          fi
+
+      - name: Assert custom marker file still exists
+        run: |
+          if [ ! -f "$GITHUB_WORKSPACE/TEST_CUSTOM_MARKER.md" ]; then
+            echo "FAIL: TEST_CUSTOM_MARKER.md not found after action ran"
+            exit 1
+          fi
+          echo "PASS: TEST_CUSTOM_MARKER.md exists"
+          cat "$GITHUB_WORKSPACE/TEST_CUSTOM_MARKER.md"

@@ -1,0 +1,32 @@
+name: Test failed status - file not found
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        # continue-on-error so we can assert on the output even if the action fails
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+          file: ${{ github.workspace }}/THIS_FILE_DOES_NOT_EXIST.md
+
+      - name: Assert action failed as expected
+        env:
+          ACTUAL: ${{ steps.action.outputs.sponsorshipStatus }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "actual: $ACTUAL"
+          echo "outcome: $OUTCOME"
+          if [ "$ACTUAL" = "failed" ]; then
+            echo "PASS: sponsorshipStatus is 'failed' as expected when file does not exist"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action step failed as expected (output: '$ACTUAL')"
+          else
+            echo "FAIL: expected action to fail, got status='$ACTUAL' outcome='$OUTCOME'"
+            exit 1
+          fi
