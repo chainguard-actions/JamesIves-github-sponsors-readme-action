@@ -1,0 +1,135 @@
+name: Release 🚀
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Merge dev into the release branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      next-version: ${{ steps.version.outputs.next-version }}
+      target-branch: ${{ steps.version.outputs.target-branch }}
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Configure Git
+        env:
+          GIT_CONFIG_EMAIL: ${{ secrets.GIT_CONFIG_EMAIL }}
+          GIT_CONFIG_NAME: ${{ secrets.GIT_CONFIG_NAME }}
+        run: |
+          git config user.email "$GIT_CONFIG_EMAIL"
+          git config user.name "$GIT_CONFIG_NAME"
+
+      - name: Compute the next version and target release branch
+        id: version
+        env:
+          INPUT_BUMP: ${{ inputs.bump }}
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          CURRENT_MAJOR="${CURRENT_VERSION%%.*}"
+          NEXT_VERSION=$(npm --no-git-tag-version version "$INPUT_BUMP")
+          NEXT_VERSION="${NEXT_VERSION#v}"
+          NEXT_MAJOR="${NEXT_VERSION%%.*}"
+          # The version bump above is only used to compute the next version
+          # number - the actual package.json bump on dev happens later, via
+          # version.yml, once the release tag has been pushed.
+          git checkout -- package.json package-lock.json
+
+          echo "Bumping $CURRENT_VERSION -> $NEXT_VERSION"
+
+          safe_next_version=$(printf '%s' "$NEXT_VERSION" | tr -d '\n\r')
+          safe_next_major=$(printf '%s' "$NEXT_MAJOR" | tr -d '\n\r')
+          safe_current_major=$(printf '%s' "$CURRENT_MAJOR" | tr -d '\n\r')
+          echo "next-version=$safe_next_version" >> "$GITHUB_OUTPUT"
+          echo "target-branch=releases/v$safe_next_major" >> "$GITHUB_OUTPUT"
+          if [ "$safe_next_major" != "$safe_current_major" ]; then
+            echo "is-new-major=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is-new-major=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create the new major release branch
+        if: steps.version.outputs.is-new-major == 'true'
+        env:
+          TARGET_BRANCH: ${{ steps.version.outputs.target-branch }}
+        run: |
+          git checkout -b "$TARGET_BRANCH"
+          git push origin "$TARGET_BRANCH"
+
+      - name: Merge dev into the existing release branch
+        if: steps.version.outputs.is-new-major == 'false'
+        env:
+          TARGET_BRANCH: ${{ steps.version.outputs.target-branch }}
+        run: |
+          git fetch origin "$TARGET_BRANCH"
+          git checkout "$TARGET_BRANCH"
+
+          if ! git merge origin/dev --no-edit; then
+            CONFLICTS=$(git diff --name-only --diff-filter=U)
+
+            # production.yml always comments out lib/node_modules in .gitignore on release
+            # branches so the build output can be committed. This makes .gitignore permanently
+            # diverge from dev, so keep the release branch's version rather than failing here.
+            if [ "$CONFLICTS" = ".gitignore" ]; then
+              echo "Resolving expected .gitignore conflict in favor of the release branch..."
+              git checkout --ours .gitignore
+              git add .gitignore
+              git commit --no-edit
+            else
+              echo "::error::Unresolved merge conflicts outside of .gitignore, manual intervention required:"
+              echo "$CONFLICTS"
+              exit 1
+            fi
+          fi
+
+          git push origin "$TARGET_BRANCH"
+
+  build:
+    name: Build Production 🔧
+    needs: prepare
+    permissions:
+      contents: write
+    uses: ./.github/workflows/production.yml
+    with:
+      ref: ${{ needs.prepare.outputs.target-branch }}
+    secrets: inherit
+
+  release:
+    name: Tag and Publish the Release 🚀
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.target-branch }}
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          NEXT_VERSION: ${{ needs.prepare.outputs.next-version }}
+          TARGET_BRANCH: ${{ needs.prepare.outputs.target-branch }}
+        run: |
+          gh release create "v$NEXT_VERSION" \
+            --title "v$NEXT_VERSION" \
+            --target "$TARGET_BRANCH" \
+            --generate-notes

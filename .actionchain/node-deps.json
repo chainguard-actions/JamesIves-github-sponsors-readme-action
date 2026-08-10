@@ -1,0 +1,13 @@
+{
+  "status": "unbundlable",
+  "entries": [
+    {
+      "path": "lib/main.js",
+      "status": "unbundlable",
+      "reason": "ignored-dynamic-import: Importing \"canvas\" was allowed even though it could not be resolved because dynamic import failures appear to be handled here:",
+      "warnings": [
+        "ignored-dynamic-import: Importing \"canvas\" was allowed even though it could not be resolved because dynamic import failures appear to be handled here:"
+      ]
+    }
+  ]
+}
