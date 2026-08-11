@@ -8,7 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
-| v1 | [`v1`](https://github.com/chainguard-actions/JamesIves-github-sponsors-readme-action/tree/v1) | [`7e80a92`](https://github.com/JamesIves/github-sponsors-readme-action/commit/7e80a92ba985718211c0a26d36a1e28d92cb1cb9) |
+| v1 | [`v1`](https://github.com/chainguard-actions/JamesIves-github-sponsors-readme-action/tree/v1) | [`02650b8`](https://github.com/JamesIves/github-sponsors-readme-action/commit/02650b8cd445fc16dfef73195f9c406dce041623) |
 | v1.5.3 | [`v1.5.3`](https://github.com/chainguard-actions/JamesIves-github-sponsors-readme-action/tree/v1.5.3) | [`c8559ec`](https://github.com/JamesIves/github-sponsors-readme-action/commit/c8559ec72c9960736d5939a68447e66e0a393b90) |
 | v1.5.4 | [`v1.5.4`](https://github.com/chainguard-actions/JamesIves-github-sponsors-readme-action/tree/v1.5.4) | [`d409b29`](https://github.com/JamesIves/github-sponsors-readme-action/commit/d409b296ceef8c040f6e50c29dc64e10deb13524) |
 | v1.5.5 | [`v1.5.5`](https://github.com/chainguard-actions/JamesIves-github-sponsors-readme-action/tree/v1.5.5) | [`7e80a92`](https://github.com/JamesIves/github-sponsors-readme-action/commit/7e80a92ba985718211c0a26d36a1e28d92cb1cb9) |
