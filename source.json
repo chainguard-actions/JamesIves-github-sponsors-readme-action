@@ -4,13 +4,13 @@
   "version": "v1.6.0",
   "commit_sha": "2fd9142e765f755780202122261dc85e78459405",
   "url": "https://github.com/JamesIves/github-sponsors-readme-action",
-  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
   "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
   "test_agent_version": "2",
   "harden_agent_version": "2",
   "node_artifact": {
-    "gcs_uri": "gs://prod-actions-node-artifacts/node-artifacts/JamesIves/github-sponsors-readme-action/v1.6.0/sha256-2067bbba3854d7f9169483dd41d12306c8c1378d9fc85e7f5f22210a06bb6f05.tar.gz",
-    "sha256": "2067bbba3854d7f9169483dd41d12306c8c1378d9fc85e7f5f22210a06bb6f05",
-    "size_bytes": 11667611
+    "gcs_uri": "gs://patch-actions-node-artifacts/node-artifacts/JamesIves/github-sponsors-readme-action/v1.6.0/sha256-5314d3d4882b36b902cc8a417fbab3e64d512575890da427783102bcae66a1cd.tar.gz",
+    "sha256": "5314d3d4882b36b902cc8a417fbab3e64d512575890da427783102bcae66a1cd",
+    "size_bytes": 12138635
   }
 }
